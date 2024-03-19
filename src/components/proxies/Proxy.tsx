@@ -27,9 +27,9 @@ function getLabelColor(latency: ProxyDelayItem) {
   const number = latency.number;
   if (number === 0) {
     return colorMap.na;
-  } else if (number < 200) {
+  } else if (number < 300) {
     return colorMap.good;
-  } else if (number < 400) {
+  } else if (number < 500) {
     return colorMap.normal;
   } else if (typeof number === 'number') {
     return colorMap.bad;
