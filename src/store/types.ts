@@ -22,6 +22,7 @@ export type ClashGeneralConfig = {
   'redir-port': number;
   'allow-lan': boolean;
   mode: string;
+  modes?: string[];
   'log-level': string;
 };
 

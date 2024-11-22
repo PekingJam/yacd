@@ -16,6 +16,7 @@ import { ClashAPIConfig } from 'src/types';
 
 import * as connAPI from '../api/connections';
 import * as proxiesAPI from '../api/proxies';
+import { fetchVersion } from 'src/api/version';  // 导入 fetchVersion
 import { getAutoCloseOldConns, getLatencyTestUrl } from './app';
 
 export const initialState: StateProxies = {
@@ -67,6 +68,8 @@ function mapLatency(names: string[], getProxy: (name: string) => { history: Late
 
 export function fetchProxies(apiConfig: ClashAPIConfig) {
   return async (dispatch: any, getState: any) => {
+    const { meta, premium } = await fetchVersion('/version', apiConfig);
+
     const [proxiesData, providersData] = await Promise.all([
       proxiesAPI.fetchProxies(apiConfig),
       proxiesAPI.fetchProviderProxies(apiConfig),
@@ -75,7 +78,7 @@ export function fetchProxies(apiConfig: ClashAPIConfig) {
     const { proxyProviders, providerProxyRecord } = formatProxyProviders(providersData.providers);
 
     const proxies = { ...providerProxyRecord, ...proxiesData.proxies };
-    const [groupNames, proxyNames] = retrieveGroupNamesFrom(proxies);
+    const [groupNames, proxyNames] = retrieveGroupNamesFrom(proxies, { meta, premium });
 
     const delayNext = {
       ...getDelay(getState()),
@@ -357,13 +360,19 @@ export function requestDelayAll(apiConfig: ClashAPIConfig) {
   };
 }
 
-function retrieveGroupNamesFrom(proxies: Record<string, ProxyItem>) {
+function retrieveGroupNamesFrom(
+  proxies: Record<string, ProxyItem>,
+  version: { meta: boolean; premium: boolean }
+  ) {
   let groupNames = [];
   let globalAll: string[];
   const proxyNames = [];
   for (const prop in proxies) {
     const p = proxies[prop];
     if (p.all && Array.isArray(p.all)) {
+      if (prop === 'GLOBAL' && version.meta && version.premium) {
+        continue;
+      }
       groupNames.push(prop);
       if (prop === 'GLOBAL') {
         globalAll = Array.from(p.all);

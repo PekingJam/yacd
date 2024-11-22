@@ -51,12 +51,6 @@ const langOptions = [
   ['en', 'English'],
 ];
 
-const modeOptions = [
-  ['Global', 'Global'],
-  ['Rule', 'Rule'],
-  ['Direct', 'Direct'],
-];
-
 const mapState = (s: State) => ({
   configs: getConfigs(s),
   apiConfig: getClashAPIConfig(s),
@@ -211,10 +205,6 @@ function ConfigImpl({
     dispatch(flushFakeIPPool(apiConfig));
   },[apiConfig, dispatch]);
 
-  const handleUpgradeCore = useCallback(() => {
-    dispatch(upgradeCore(apiConfig));
-  }, [apiConfig, dispatch]);
-
   const handleUpdateGeoDatabasesFile = useCallback(() => {
     dispatch(updateGeoDatabasesFile(apiConfig));
   }, [apiConfig, dispatch]);
@@ -231,6 +221,10 @@ function ConfigImpl({
   const { data: version } = useQuery(['/version', apiConfig], () =>
     fetchVersion('/version', apiConfig)
   );
+
+  const modeOptions = useMemo(() => {
+    return configState.modes || ['Global', 'Rule', 'Direct'];
+  }, [configState.modes]);
 
   return (
     <div>
@@ -254,7 +248,7 @@ function ConfigImpl({
         <div>
           <div className={s0.label}>Mode</div>
           <Select
-            options={modeOptions}
+            options={modeOptions.map((mode) => [mode, mode])}
             selected={mode}
             onChange={(e) => handleChangeValue({ name: 'mode', value: e.target.value })}
           />
@@ -304,6 +298,7 @@ function ConfigImpl({
               onClick={handleFlushFakeIPPool}
           />
         </div>
+        {(version.meta && version.premium) || (
         <div>
           <div className={s0.label}>GEO Databases</div>
           <Button
@@ -312,6 +307,7 @@ function ConfigImpl({
               onClick={handleUpdateGeoDatabasesFile}
           />
         </div>
+        )}
       </div>
 
       <div className={s0.sep}>
